@@ -30,7 +30,7 @@ FUNCTION con2020_model_rtp, eq_type, r_rj, colat_rads, elong_rads, use_these_par
   ;% Optional input of a structure: use_these_params
   ;% with the structure fields:
   ;%  use_these_params.mu_i_div2__current_density_nT           - mu0i0/2 term (current sheet current density), in nT
-  ;%  use_these_params.i_rho__azimuthal_current_density_nT     - azimuthal current term from Connerney et al., 2020
+  ;%  use_these_params.i_rho__radial_current_density_nT        - radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)
   ;%  use_these_params.r0__inner_rj                            - inner edge of current disk in Rj
   ;%  use_these_params.r1__outer_rj                            - outer edge of current disk in Rj
   ;%  use_these_params.d__cs_half_thickness_rj                 - current sheet half thickness in Rj
@@ -62,7 +62,7 @@ FUNCTION con2020_model_rtp, eq_type, r_rj, colat_rads, elong_rads, use_these_par
   ;%        Bessel functions.
   ;%
   ;% Updates:
-  ;% by Marissa Vogt, March 2021,
+  ;% by Marissa Vogt (mvogt@bu.edu), March 2021,
   ;% RJ Wilson did some speedups and re-formatting of lines, also March 2021
   ;%
   ;% Converted to MATLAB by Marty Brennan, June 2021
