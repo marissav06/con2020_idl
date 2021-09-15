@@ -1,6 +1,6 @@
 FUNCTION con2020_model_rtp, eq_type, r_rj, colat_rads, elong_rads, use_these_params
   ;% ======
-  ;% CAN_SHEET_VARIABLE_2020_HYBRID (Spherical)
+  ;% CON2020_MODEL_RTP (Spherical)
   ;% ======
   ;% Code to calculate the perturbation magnetic field produced by the Connerney et al. 1981 (CAN) current sheet, which is
   ;% represented by a finite disk of current.
