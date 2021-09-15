@@ -216,7 +216,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
       r1__outer_rj                            :  51.4d  , $ ;% outer radius (Rj)
       d__cs_half_thickness_rj                 :   3.6d  , $ ;% half-height  (Rj)
       xt__cs_tilt_degs                        :   9.3d  , $ ;% current sheet tilt (Deg.)
-      xp__cs_rhs_azimuthal_angle_of_tilt_degs : -24.2d  , $ ;% current sheet longitude (right handed) (Deg.), Table 1 xp = 204.2 but that value is in left handed SIII
+      xp__cs_rhs_azimuthal_angle_of_tilt_degs : 155.8d  , $ ;% current sheet longitude (right handed) (Deg.), Table 1 xp = 204.2 but that value is in left handed SIII
       i_rho__azimuthal_current_density_nT     :  16.7d  , $ ;% Azimuthal current term
       error_check : 1b      }   ;% input error check: 1 = yes, 0 = no
 
@@ -286,6 +286,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
     ENDELSE
   ENDIF
 
+  xp__cs_rhs_azimuthal_angle_of_tilt_degs -= 180.0d ;shift needed because of the way we define the rotation angle 
   dipole_shift = xp__cs_rhs_azimuthal_angle_of_tilt_degs * Deg2Rad; % xp__cs_rhs_azimuthal_angle_of_tilt_degs is longitude of the current sheet tilt (roughly the dipole longitude). dipole_shift used here and at end of code
   theta_cs     = xt__cs_tilt_degs * Deg2Rad ; % dipole tilt is xt__cs_tilt_degs
   cos_dipole_shift = cos(dipole_shift)
