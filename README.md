@@ -85,7 +85,7 @@ These codes were developed by Fran Bagenal, Marty Brennan, Matt James, Gabby Pro
   
 <h3><b>Outputs</b></h3>
 <ul>
-  <li>The code outputs a vector that contains the 3 components of the magnetic field produced by the current sheet.</li>
+  <li>The code outputs a vector that contains the 3 components of the magnetic field produced by the current sheet, in SIII right-handed.</li>
   <li>For con2020_model_rtp (spherical input/output) the vector is [Br, Btheta, Bphi] in nT.</li>
   <li>For con2020_model_xyz (cartesian input/output) the vector is [Bx, By, Bz] in nT.</li>
   </ul>   
