@@ -5,8 +5,7 @@
   ;% represented by a finite disk of current.
   ;%  This disk has variable parameters including (among others) the current density, and current sheet inner edge, outer
   ;%   edge and thickness.
-  ;%  The disk is centered on the magnetic equator (shifted in longitude and tilted according to the dipole field
-  ;%   parameters of an internal field model like VIP4 or JRM09)
+  ;%  The disk is centered on the magnetic equator (shifted in longitude and tilted as specified by model parameters xp__cs_rhs_azimuthal_angle_of_tilt_degs and xt__cs_tilt_degs)
   ;%  This 2020 version includes a radial current per Connerney et al. (2020),
   ;%   https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020JA028138
   ;%  For more details about the model and the development of this code please see the PDF at 
@@ -35,8 +34,8 @@
   ;%  use_these_params.r0__inner_rj                            - inner edge of current disk in Rj
   ;%  use_these_params.r1__outer_rj                            - outer edge of current disk in Rj
   ;%  use_these_params.d__cs_half_thickness_rj                 - current sheet half thickness in Rj
-  ;%  use_these_params.xt__cs_tilt_degs                        - dipole tilt in degrees
-  ;%  use_these_params.xp__cs_rhs_azimuthal_angle_of_tilt_degs - dipole longitude (right handed) in degrees
+  ;%  use_these_params.xt__cs_tilt_degs                        - current sheet tilt in degrees
+  ;%  use_these_params.xp__cs_rhs_azimuthal_angle_of_tilt_degs - current sheet longitude (right handed) in degrees
   ;%  use_these_params.error_check                             - 1 to check that inputs are valid (Default),
   ;%                                                             or set to 0 to skip input checks (faster).
   ;%
@@ -216,8 +215,8 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
       r0__inner_rj                            :   7.8d  , $ ;% inner radius (Rj)
       r1__outer_rj                            :  51.4d  , $ ;% outer radius (Rj)
       d__cs_half_thickness_rj                 :   3.6d  , $ ;% half-height  (Rj)
-      xt__cs_tilt_degs                        :   9.3d  , $ ;% dipole tilt (Deg.)
-      xp__cs_rhs_azimuthal_angle_of_tilt_degs : -24.2d  , $ ;% dipole longitude (right handed) (Deg.), Table 1 xp = 204.2 but that value is in left handed SIII
+      xt__cs_tilt_degs                        :   9.3d  , $ ;% current sheet tilt (Deg.)
+      xp__cs_rhs_azimuthal_angle_of_tilt_degs : -24.2d  , $ ;% current sheet longitude (right handed) (Deg.), Table 1 xp = 204.2 but that value is in left handed SIII
       i_rho__azimuthal_current_density_nT     :  16.7d  , $ ;% Azimuthal current term
       error_check : 1b      }   ;% input error check: 1 = yes, 0 = no
 
@@ -287,7 +286,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
     ENDELSE
   ENDIF
 
-  dipole_shift = xp__cs_rhs_azimuthal_angle_of_tilt_degs * Deg2Rad; % xp__cs_rhs_azimuthal_angle_of_tilt_degs is longitude of the dipole. dipole_shift used here and at end of code
+  dipole_shift = xp__cs_rhs_azimuthal_angle_of_tilt_degs * Deg2Rad; % xp__cs_rhs_azimuthal_angle_of_tilt_degs is longitude of the current sheet tilt (roughly the dipole longitude). dipole_shift used here and at end of code
   theta_cs     = xt__cs_tilt_degs * Deg2Rad ; % dipole tilt is xt__cs_tilt_degs
   cos_dipole_shift = cos(dipole_shift)
   sin_dipole_shift = sin(dipole_shift)
@@ -499,7 +498,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   bx1 = brho1*cos_phi1 - bphi1*sin_phi1
   by1 = brho1*sin_phi1 + bphi1*cos_phi1
 
-  ;% Rotate back by dipole tilt amount, into coordinate system that is aligned with Jupiter's spin axis
+  ;% Rotate back by current sheet tilt amount, into coordinate system that is aligned with Jupiter's spin axis
   bx = bx1*cos_theta_cs - bz1*sin_theta_cs
   ;by = by1; % just using by1 below
   bz = bx1*sin_theta_cs + bz1*cos_theta_cs
