@@ -74,7 +74,7 @@ These codes were developed by Fran Bagenal, Marty Brennan, Matt James, Gabby Pro
   <tr>
     <td>xp__cs_rhs_azimuthal_angle_of_tilt_degs</td>
     <td>azimuthal angle of the current sheet tilt (right handed)</td>
-    <td>-24.2 degrees right handed (corresponds to 204.2 degrees left handed longitude)</td>
+    <td>155.8 degrees right handed (corresponds to 204.2 degrees left handed longitude)</td>
   </tr>
   <tr>
     <td>error_check</td>
