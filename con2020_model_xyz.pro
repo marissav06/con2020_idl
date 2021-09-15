@@ -205,7 +205,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
     d__cs_half_thickness_rj                 = DOUBLE(use_these_params.d__cs_half_thickness_rj                   )
     xt__cs_tilt_degs                        = DOUBLE(use_these_params.xt__cs_tilt_degs                          )
     xp__cs_rhs_azimuthal_angle_of_tilt_degs = DOUBLE(use_these_params.xp__cs_rhs_azimuthal_angle_of_tilt_degs   )
-    i_rho__azimuthal_current_density_nT     = DOUBLE(use_these_params.i_rho__azimuthal_current_density_nT       )
+    i_rho__radial_current_density_nT     = DOUBLE(use_these_params.i_rho__radial_current_density_nT       )
     error_check = DOUBLE(use_these_params.error_check) ;
 
   ENDIF ELSE BEGIN
@@ -217,7 +217,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
       d__cs_half_thickness_rj                 :   3.6d  , $ ;% half-height  (Rj)
       xt__cs_tilt_degs                        :   9.3d  , $ ;% current sheet tilt (Deg.)
       xp__cs_rhs_azimuthal_angle_of_tilt_degs : 155.8d  , $ ;% current sheet longitude (right handed) (Deg.), Table 1 xp = 204.2 but that value is in left handed SIII
-      i_rho__azimuthal_current_density_nT     :  16.7d  , $ ;% Azimuthal current term
+      i_rho__radial_current_density_nT        :  16.7d  , $ ;% radial current term
       error_check : 1b      }   ;% input error check: 1 = yes, 0 = no
 
     IF STRCMP(eq_type,'default_values',FOLD_CASE=1) THEN BEGIN
@@ -231,7 +231,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
     d__cs_half_thickness_rj                 = Default_values.d__cs_half_thickness_rj
     xt__cs_tilt_degs                        = Default_values.xt__cs_tilt_degs
     xp__cs_rhs_azimuthal_angle_of_tilt_degs = Default_values.xp__cs_rhs_azimuthal_angle_of_tilt_degs
-    i_rho__azimuthal_current_density_nT     = Default_values.i_rho__azimuthal_current_density_nT
+    i_rho__radial_current_density_nT     = Default_values.i_rho__radial_current_density_nT
     error_check = Default_values.error_check
   ENDELSE
 
@@ -251,7 +251,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
     IF (ISA(d__cs_half_thickness_rj                , NUMBER=1, SCALAR=1) EQ 0) THEN MESSAGE,'ERROR: Field          d__cs_half_thickness_rj        must be a scalar number'
     IF (ISA(xt__cs_tilt_degs                       , NUMBER=1, SCALAR=1) EQ 0) THEN MESSAGE,'ERROR: Field             xt__cs_tilt_degs            must be a scalar number'
     IF (ISA(xp__cs_rhs_azimuthal_angle_of_tilt_degs, NUMBER=1, SCALAR=1) EQ 0) THEN MESSAGE,'ERROR: Field xp__cs_rhs_azimuthal_angle_of_tilt_degs must be a scalar number'
-    IF (ISA(i_rho__azimuthal_current_density_nT    , NUMBER=1, SCALAR=1) EQ 0) THEN MESSAGE,'ERROR: Field   i_rho__azimuthal_current_density_nT   must be a scalar number'
+    IF (ISA(i_rho__radial_current_density_nT    , NUMBER=1, SCALAR=1) EQ 0) THEN MESSAGE,'ERROR: Field   i_rho__radial_current_density_nT   must be a scalar number'
 
     ;IF (error_check NE 0) AND (error_check NE 1)   THEN MESSAGE,'ERROR: Field  error_check must be 0 or 1'
     ;% if here error_check must be scalar and not 0
@@ -466,7 +466,7 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
 
 
   ;% New to CAN2020 (not included in CAN1981): radial current produces an azimuthal field, so Bphi is nonzero
-  bphi1 = 2.7975d*i_rho__azimuthal_current_density_nT/rho1
+  bphi1 = 2.7975d*i_rho__radial_current_density_nT/rho1
 
   IF scalar_input THEN BEGIN
     IF abs_z1 LT d__cs_half_thickness_rj  THEN  bphi1 =  bphi1 * abs_z1 / d__cs_half_thickness_rj
