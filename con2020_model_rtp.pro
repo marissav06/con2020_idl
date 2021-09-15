@@ -10,6 +10,8 @@ FUNCTION con2020_model_rtp, eq_type, r_rj, colat_rads, elong_rads, use_these_par
   ;%   parameters of an internal field model like VIP4 or JRM09)
   ;%  This 2020 version includes a radial current per Connerney et al. (2020),
   ;%   https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020JA028138
+  ;%  For more details about the model and the development of this code please see the PDF at 
+  ;%   https://github.com/marissav06/con2020_idl/blob/main/con2020_final_code_documentation_sept13_2021.pdf
   ;%
   ;% Use in one of the following ways:
   ;%  Use default current sheet model parameter structure:  B = con2020_model_rtp(eq_type, r_rj, colat_rads, elong_rads)
