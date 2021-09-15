@@ -1,7 +1,82 @@
+  ;% ======
+  ;% CON2020_MODEL_XYZ (Cartesian)
+  ;% ======
+  ;% Code to calculate the perturbation magnetic field produced by the Connerney et al. 1981 (CAN) current sheet, which is
+  ;% represented by a finite disk of current.
+  ;%  This disk has variable parameters including (among others) the current density, and current sheet inner edge, outer
+  ;%   edge and thickness.
+  ;%  The disk is centered on the magnetic equator (shifted in longitude and tilted according to the dipole field
+  ;%   parameters of an internal field model like VIP4 or JRM09)
+  ;%  This 2020 version includes a radial current per Connerney et al. (2020),
+  ;%   https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020JA028138
+  ;%  For more details about the model and the development of this code please see the PDF at 
+  ;%   https://github.com/marissav06/con2020_idl/blob/main/con2020_final_code_documentation_sept13_2021.pdf
+  ;%
+  ;% Use in one of the following ways:
+  ;%  Use default current sheet model parameter structure:  B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj)
+  ;%  Use your own current sheet model parameter structure: B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, use_these_params)
+  ;%  Obtain the default model parameters:             params = con2020_model_xyz('default_values')
+  ;%  Then you can edit the structure and use, e.g. params.r1__outer_rj = 51.400001,
+  ;%    then B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, params)
+  ;%
+  ;% Required inputs (System III Cartesian, right handed; see con2020_model_rtp.pro for spherical version):
+  ;%  eq_type - equation type: 'integral', 'analytic' or 'hybrid',
+  ;%   or set to 'default_values' to return a structure of all default values.
+  ;%  x_rj      - SYSIII x position, in Rj, Values must be -200 < x_rj < 200.
+  ;%  y_rj      - SYSIII y position, in Rj, Values must be -200 < x_rj < 200.
+  ;%  z_rj      - SYSIII z position, in Rj, Values must be -200 < x_rj < 200.
+  ;% x_rj, y_rj and z_rj can be scalars or 1D arrays (nx1), but only one eq_type.
+  ;%
+  ;% Unless an option structure is provided it will default to parameters from Connerney et al., 2020.
+  ;% Optional input of a structure: use_these_params
+  ;% with the structure fields:
+  ;%  use_these_params.mu_i_div2__current_density_nT           - mu0i0/2 term (current sheet current density), in nT
+  ;%  use_these_params.i_rho__radial_current_density_nT        - radial current term from Connerney et al., 2020 (set this to zero to turn radial currents off as in Connerney et al. 1981)
+  ;%  use_these_params.r0__inner_rj                            - inner edge of current disk in Rj
+  ;%  use_these_params.r1__outer_rj                            - outer edge of current disk in Rj
+  ;%  use_these_params.d__cs_half_thickness_rj                 - current sheet half thickness in Rj
+  ;%  use_these_params.xt__cs_tilt_degs                        - dipole tilt in degrees
+  ;%  use_these_params.xp__cs_rhs_azimuthal_angle_of_tilt_degs - dipole longitude (right handed) in degrees
+  ;%  use_these_params.error_check                             - 1 to check that inputs are valid (Default),
+  ;%                                                             or set to 0 to skip input checks (faster).
+  ;%
+  ;% To retrieve the default value parameters, run
+  ;% params = con2020_model_xyz('default_values')
+  ;% then you may edit the values in the structure, then use as B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, params)
+  ;%
+  ;% Outputs:
+  ;%  B - Cartesian Magnetic field vector from current sheet model, [Bx, By, Bz], units of nT.
+  ;%
+  ;% This code takes a hybrid approach to calculating the current sheet field, using the integral equations in some regions
+  ;% and the analytic equations in others.
+  ;% Following Connerney et al. 1981, figure A1, and Edwards et al. (2001), figure 2, the choice of integral vs. analytic
+  ;% equations is most important near rho = r0 and z = 0.
+  ;% By default, this code uses the analytic equations everywhere except |Z| < D*1.5 and |Rho-R0| < 2
+  ;%    Analytic equations:
+  ;%        For the analytic equations, we use the equations provided by Edwards et al. 2001:
+  ;%         https://doi.org/10.1016/S0032-0633(00)00164-1
+  ;%        Other analytic approximations to the CAN sheet equations are provided in Connerney et al., 1981
+  ;%         https://doi.org/10.1029/JA086iA10p08370
+  ;%    Integral equations:
+  ;%        For the integral equations we use the Bessel functions from Connerney et al. 1981, eqs. 14, 15, 17, 18
+  ;%        We do not integrate lambda from zero to infinity, but vary the integration limit depending on the value of the
+  ;%        Bessel functions.
+  ;%
+  ;% Updates:
+  ;% by Marissa Vogt, March 2021,
+  ;% RJ Wilson did some speedups and re-formatting of lines, also March 2021
+  ;%
+  ;% Converted to MATLAB by Marty Brennan, June 2021
+  ;% RJ Wilson did some reformatting, June 2021, and added
+  ;% int_tabulated_rjw2_sub as a subfunction, rather than separate file int_tabulated_rjw2.m
+  ;% which was then replaced by some in-line code instead of calling the subfunction
+  ;% RJ Wilson split initial Matlab and IDL code in to Cartesian and a Spherical wrapper code and updated this help text,
+  ;% in August 2021, to make con2020_model_xyz and con2020_model_rtp.
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Function con2020_model_xyz begins around line 110 or so. Sub-functions are listed first (in order to compile appropriately in IDL).
-; So scroll down to see all the help comments, including how to run this.
+; Function con2020_model_xyz begins around line 185. Sub-functions are listed first (in order to compile appropriately in IDL).
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 FUNCTION _con2020_model_xyz_analytic, rho1, z1, rho1_sq, d__cs_half_thickness_rj, r, mu_i_div2__current_density_nT, scalar_input
   COMPILE_OPT HIDDEN
   ON_ERROR, 2 ;Return to caller if an error occurs.
@@ -113,73 +188,8 @@ FUNCTION con2020_model_xyz, eq_type, x_rj, y_rj, z_rj, use_these_params
   ;% ======
   ;% Code to calculate the perturbation magnetic field produced by the Connerney et al. 1981 (CAN) current sheet, which is
   ;% represented by a finite disk of current.
-  ;%  This disk has variable parameters including (among others) the current density, and current sheet inner edge, outer
-  ;%   edge and thickness.
-  ;%  The disk is centered on the magnetic equator (shifted in longitude and tilted according to the dipole field
-  ;%   parameters of an internal field model like VIP4 or JRM09)
-  ;%  This 2020 version includes a radial current per Connerney et al. (2020),
-  ;%   https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020JA028138
   ;%
-  ;% Use in one of the following ways:
-  ;%  Use default current sheet model parameter structure:  B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj)
-  ;%  Use your own current sheet model parameter structure: B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, use_these_params)
-  ;%  Obtain the default model parameters:             params = con2020_model_xyz('default_values')
-  ;%  Then you can edit the structure and use, e.g. params.r1__outer_rj = 51.400001,
-  ;%    then B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, params)
-  ;%
-  ;% Required inputs (System III Cartesian, right handed):
-  ;%  eq_type - equation type: 'integral', 'analytic' or 'hybrid',
-  ;%   or set to 'default_values' to return a structure of all default values.
-  ;%  x_rj      - SYSIII x position, in Rj, Values must be -200 < x_rj < 200.
-  ;%  y_rj      - SYSIII y position, in Rj, Values must be -200 < x_rj < 200.
-  ;%  z_rj      - SYSIII z position, in Rj, Values must be -200 < x_rj < 200.
-  ;% x_rj, y_rj and z_rj can be scalars or 1D arrays (nx1), but only one eq_type.
-  ;%
-  ;% Unless an option structure is provided it will default to parameters from Connerney et al., 2020.
-  ;% Optional input of a structure: use_these_params
-  ;% with the structure fields:
-  ;%  use_these_params.mu_i_div2__current_density_nT           - mu0i0/2 term (current sheet current density), in nT
-  ;%  use_these_params.i_rho__azimuthal_current_density_nT     - azimuthal current term from Connerney et al., 2020
-  ;%  use_these_params.r0__inner_rj                            - inner edge of current disk in Rj
-  ;%  use_these_params.r1__outer_rj                            - outer edge of current disk in Rj
-  ;%  use_these_params.d__cs_half_thickness_rj                 - current sheet half thickness in Rj
-  ;%  use_these_params.xt__cs_tilt_degs                        - dipole tilt in degrees
-  ;%  use_these_params.xp__cs_rhs_azimuthal_angle_of_tilt_degs - dipole longitude (right handed) in degrees
-  ;%  use_these_params.error_check                             - 1 to check that inputs are valid (Default),
-  ;%                                                             or set to 0 to skip input checks (faster).
-  ;%
-  ;% To retrieve the default value parameters, run
-  ;% params = con2020_model_xyz('default_values')
-  ;% then you may edit the values in the structure, then use as B = con2020_model_xyz(eq_type, x_rj, y_rj, z_rj, params)
-  ;%
-  ;% Outputs:
-  ;%  B - Cartesian Magnetic field vector from current sheet model, [Bx, By, Bz], units of nT.
-  ;%
-  ;% This code takes a hybrid approach to calculating the current sheet field, using the integral equations in some regions
-  ;% and the analytic equations in others.
-  ;% Following Connerney et al. 1981, figure A1, and Edwards et al. (2001), figure 2, the choice of integral vs. analytic
-  ;% equations is most important near rho = r0 and z = 0.
-  ;% By default, this code uses the analytic equations everywhere except |Z| < D*1.5 and |Rho-R0| < 2
-  ;%    Analytic equations:
-  ;%        For the analytic equations, we use the equations provided by Edwards et al. 2001:
-  ;%         https://doi.org/10.1016/S0032-0633(00)00164-1
-  ;%        Other analytic approximations to the CAN sheet equations are provided in Connerney et al., 1981
-  ;%         https://doi.org/10.1029/JA086iA10p08370
-  ;%    Integral equations:
-  ;%        For the integral equations we use the Bessel functions from Connerney et al. 1981, eqs. 14, 15, 17, 18
-  ;%        We do not integrate lambda from zero to infinity, but vary the integration limit depending on the value of the
-  ;%        Bessel functions.
-  ;%
-  ;% Updates:
-  ;% by Marissa Vogt, March 2021,
-  ;% RJ Wilson did some speedups and re-formatting of lines, also March 2021
-  ;%
-  ;% Converted to MATLAB by Marty Brennan, June 2021
-  ;% RJ Wilson did some reformatting, June 2021, and added
-  ;% int_tabulated_rjw2_sub as a subfunction, rather than separate file int_tabulated_rjw2.m
-  ;% which was then replaced by some in-line code instead of calling the subfunction
-  ;% RJ Wilson split initial Matlab and IDL code in to Cartesian and a Spherical wrapper code and updated this help text,
-  ;% in August 2021, to make con2020_model_xyz and con2020_model_rtp.
+  ;% More details are provided in comments at top of this file. 
 
   ON_ERROR, 2 ; % Exit code if an error in main, don't stop in code - no Matlab equivalent, just delete line in Matlab
   FORWARD_FUNCTION _con2020_model_xyz_analytic ; telling IDL this is a function, in case _con2020_model_xyz_analytic has not been compiled yet.
