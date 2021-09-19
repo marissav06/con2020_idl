@@ -3,6 +3,8 @@ This repository contains  IDL code for the Connerney et al. (2020) Jupiter curre
 
 A PDF documentation file ([con2020_final_code_documentation_sept13_2021.pdf](https://github.com/marissav06/con2020_idl/files/7157389/con2020_final_code_documentation_sept13_2021.pdf)) is available in this repository. It describes the Connerney current sheet model and general code development (equations used, numerical integration assumptions, accuracy testing, etc.). Details specific to the IDL code are provided in this readme file.
 
+This code provides <b>only the magnetic field due to the current sheet</b>. For the full magnetospheric field one should include a model for Jupiter's internal magnetic field, such as VIP4 or JRM09. You can find IDL code for the JRM09 internal field model here: https://github.com/marissav06/jovian_jrm09_internal
+
 These codes were developed by Fran Bagenal, Marty Brennan, Matt James, Gabby Provan, Marissa Vogt, and Rob Wilson, with thanks to Jack Connerney and Masafumi Imai. They are intended for use by the Juno science team and other members of the planetary magnetospheres community. Our contact information is in the documentation PDF file.
 
 <h3><b>Running the code</b><ul></h3>
